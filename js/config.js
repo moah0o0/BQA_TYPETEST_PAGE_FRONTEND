@@ -5,7 +5,7 @@
  * 비워 두면 "체험 모드"로 동작합니다. (결과가 이 브라우저에만 저장되고 서버로 가지 않음)
  */
 window.APP_CONFIG = {
-  API_BASE: "",
+  API_BASE: "https://typetest-api.busanqueeract.kr",
   COOKIE_NAME: "bqa_typetest_me",
   COOKIE_DAYS: 365,
 };
