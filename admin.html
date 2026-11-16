@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>해설지 출력 · 운영</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+  <link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+  <header class="bar">
+    <strong>퀴어 활동 캐해 · 해설지 출력</strong>
+    <span id="conn" class="pill">연결 안 됨</span>
+  </header>
+
+  <main class="wrap">
+    <section class="col controls">
+      <details id="settings">
+        <summary>연결 설정</summary>
+        <label>API 주소 <input id="api" placeholder="https://typetest-api.example.kr"></label>
+        <label>관리자 토큰 <input id="token" type="password" autocomplete="off"></label>
+        <button id="save">저장하고 연결</button>
+        <p class="muted">토큰은 이 컴퓨터의 브라우저에만 저장돼요.</p>
+      </details>
+
+      <form id="lookup" class="lookup">
+        <label for="num">결과 번호</label>
+        <div class="row"><input id="num" inputmode="numeric" pattern="[0-9]*" placeholder="예) 42" autocomplete="off"><button>불러오기</button></div>
+      </form>
+
+      <div class="opts">
+        <label>용지 <select id="paper"><option value="58">58mm</option><option value="80">80mm</option></select></label>
+        <label><input type="checkbox" id="withChar" checked> 캐릭터 포함</label>
+        <label><input type="checkbox" id="withMsg" checked> 한마디 포함</label>
+      </div>
+
+      <div class="actions">
+        <button id="print" class="primary" disabled>인쇄 (Ctrl+P)</button>
+        <button id="png" disabled>PNG 저장</button>
+        <button id="txt" disabled>텍스트 저장</button>
+        <button id="done" disabled>출력 완료 표시</button>
+      </div>
+
+      <h2>최근 참여자 <small class="muted">10초마다 갱신</small></h2>
+      <input id="q" placeholder="닉네임·한마디·번호 검색">
+      <table class="list">
+        <thead><tr><th>No.</th><th>닉네임</th><th>유형</th><th>출력</th><th>행진</th></tr></thead>
+        <tbody id="rows"><tr><td colspan="5" class="muted">연결 설정을 먼저 해 주세요.</td></tr></tbody>
+      </table>
+    </section>
+
+    <section class="col preview">
+      <div id="receipt" class="receipt w58"><p class="placeholder">번호를 불러오면 해설지 미리보기가 여기에 나와요.</p></div>
+    </section>
+  </main>
+
+  <script src="js/config.js"></script>
+  <script src="js/content.js"></script>
+  <script src="js/characters.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="js/receipt.js"></script>
+  <script src="js/admin.js"></script>
+</body>
+</html>
