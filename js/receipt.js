@@ -40,7 +40,7 @@
       <ul>${t.goodAt.map((g) => `<li>${esc(g)}</li>`).join("")}</ul>
       <h4>네 가지 역할로 보면</h4><p>${esc(t.role.name)}</p>
       <h4>찰떡 궁합</h4><p>${esc(best.name)} — ${esc(t.bestWith.why)}</p>
-      <h4>부딪히면 성장</h4><p>${esc(clash.name)}</p>
+      <h4>부딪히며 성장</h4><p>${esc(clash.name)}</p>
       ${withMsg && r.message ? `<hr><div class="c">내가 외친 한마디</div><div class="msg">"${esc(r.message)}"</div>` : ""}
       <hr>
       <p class="c" style="font-weight:900">${esc(t.cheer)}</p>
@@ -64,7 +64,7 @@
       "* 이런 활동이 잘 맞아요", ...t.goodAt.map((g) => ` - ${g}`), "",
       `* 네 가지 역할로 보면: ${t.role.name}`,
       `* 찰떡 궁합: ${C.types[t.bestWith.code].name}`,
-      `* 부딪히면 성장: ${C.types[t.clashWith.code].name}`,
+      `* 부딪히며 성장: ${C.types[t.clashWith.code].name}`,
     ];
     if (withMsg && r.message) out.push(line, "내가 외친 한마디", `"${r.message}"`);
     out.push(line, t.cheer, "", center(today()), "", "", "");

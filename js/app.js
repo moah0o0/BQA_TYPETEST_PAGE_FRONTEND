@@ -197,10 +197,10 @@
             <h4>사회운동의 네 가지 역할로 보면</h4>
             <p><b>${esc(t.role.name)}</b>에 가까워요. ${esc(t.role.note)}</p>
           </div>
-          <h3>함께하면 좋은 동료</h3>
+          <h3>🍀 함께하면 좋은 동료</h3>
           <div class="pair">
             <a href="#/type/${t.bestWith.code}"><div class="label">찰떡 궁합</div>${ch(t.bestWith.code, "char mini")}<div class="nm">${esc(best.name)}</div><div class="why">${esc(t.bestWith.why)}</div></a>
-            <a href="#/type/${t.clashWith.code}"><div class="label">부딪히면 성장</div>${ch(t.clashWith.code, "char mini")}<div class="nm">${esc(clash.name)}</div><div class="why">${esc(t.clashWith.why)}</div></a>
+            <a href="#/type/${t.clashWith.code}"><div class="label">부딪히며 성장</div>${ch(t.clashWith.code, "char mini")}<div class="nm">${esc(clash.name)}</div><div class="why">${esc(t.clashWith.why)}</div></a>
           </div>
           <div class="callout">
             <h4>${esc(C.closing.title)}</h4>

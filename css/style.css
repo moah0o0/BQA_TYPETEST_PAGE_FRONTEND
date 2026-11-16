@@ -190,34 +190,35 @@ textarea.input { text-align: left; font-size: 18px; resize: none; border: 2.5px 
 .result-head { text-align: center; color: #fff; padding: 10px 0 14px; }
 .result-head .who { font-size: 16px; font-weight: 700; }
 .result-card { padding: 0; overflow: hidden; }
-.result-card .cover { padding: 24px 20px 20px; text-align: center; border-bottom: 2.5px solid var(--ink); }
+.result-card .cover { padding: 28px 22px 26px; text-align: center; border-bottom: 2.5px solid var(--ink); }
 .result-card .cover .char { width: 170px; height: 200px; margin: 0 auto; }
 .result-card .number-tag {
   display: inline-block; font-weight: 800; font-size: 13px; background: var(--ink); color: #fff;
   padding: 4px 10px; border-radius: 999px; letter-spacing: .04em;
 }
-.type-name { font-family: var(--display); font-weight: 400; font-size: 40px; line-height: 1.1; margin: 10px 0 6px; letter-spacing: -0.02em; }
-.type-tagline { font-size: 17px; font-weight: 700; margin: 0; }
-.keywords { display: flex; justify-content: center; flex-wrap: wrap; gap: 6px; margin: 14px 0 0; }
+.type-name { font-family: var(--display); font-weight: 400; font-size: 40px; line-height: 1.15; margin: 14px 0 10px; letter-spacing: -0.02em; }
+.type-tagline { font-size: 17px; font-weight: 700; line-height: 1.5; margin: 0; }
+.keywords { display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; margin: 18px 0 0; }
 .keywords span { background: #fff; border: 2px solid var(--ink); border-radius: 999px; padding: 4px 11px; font-size: 14px; font-weight: 700; }
-.result-body { padding: 22px 20px 24px; }
-.result-body h3 { font-size: 19px; line-height: 1.4; margin: 26px 0 8px; letter-spacing: -0.02em; }
-.result-body h3:first-child { margin-top: 0; }
-.result-body p { font-size: 16px; line-height: 1.75; margin: 0; color: var(--ink-2); }
-.result-body ul { margin: 0; padding-left: 20px; line-height: 1.8; color: var(--ink-2); }
-.callout { margin-top: 22px; border-radius: 16px; padding: 16px; background: var(--paper-2); border: 2px dashed #9b8fe0; }
-.callout h4 { margin: 0 0 6px; font-size: 15px; }
-.callout p { font-size: 15px; }
-.pair { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+.result-body { padding: 30px 24px 32px; }
+.result-card .result-body h3 { font-size: 19px; line-height: 1.45; margin: 36px 0 12px; letter-spacing: -0.02em; }
+.result-card .result-body h3:first-child { margin-top: 0; }
+.result-body p { font-size: 16px; line-height: 1.85; margin: 0; color: var(--ink-2); }
+.result-body ul { margin: 0; padding-left: 20px; line-height: 1.7; color: var(--ink-2); }
+.result-body li + li { margin-top: 6px; }
+.callout { margin-top: 32px; border-radius: 16px; padding: 20px 18px; background: var(--paper-2); border: 2px dashed #9b8fe0; }
+.callout h4 { margin: 0 0 10px; font-size: 15px; line-height: 1.4; }
+.result-body .callout p { font-size: 15px; line-height: 1.8; }
+.pair { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 4px; }
 .pair a {
-  display: block; text-decoration: none; border: 2px solid var(--ink); border-radius: 16px; padding: 12px 10px;
+  display: block; text-decoration: none; border: 2px solid var(--ink); border-radius: 16px; padding: 16px 12px 18px;
   background: #fff; text-align: center;
 }
 .pair .label { font-size: 12px; font-weight: 800; color: var(--ink-3); }
-.pair .mini { width: 64px; height: 76px; margin: 4px auto; }
-.pair .nm { font-weight: 800; font-size: 15px; }
-.pair .why { font-size: 13px; line-height: 1.5; color: var(--ink-2); margin-top: 4px; }
-.cheer { margin-top: 24px; text-align: center; font-size: 20px; font-weight: 800; color: var(--accent); }
+.pair .mini { width: 72px; height: 84px; margin: 8px auto 10px; }
+.pair .nm { font-weight: 800; font-size: 15px; line-height: 1.4; }
+.pair .why { font-size: 13px; line-height: 1.65; color: var(--ink-2); margin-top: 8px; }
+.result-body .cheer { margin-top: 36px; text-align: center; font-size: 20px; line-height: 1.5; font-weight: 800; color: var(--accent); }
 .booth {
   margin-top: 14px; text-align: center; background: var(--yellow); border: 2.5px solid var(--ink);
   border-radius: 20px; padding: 18px 16px; box-shadow: var(--shadow);
@@ -228,7 +229,7 @@ textarea.input { text-align: left; font-size: 18px; resize: none; border: 2.5px 
 .danger-link { background: none; border: 0; color: rgba(255,255,255,.8); font-size: 13px; text-decoration: underline; cursor: pointer; margin: 16px auto 0; display: block; }
 
 /* 축 막대 */
-.axes { display: grid; gap: 14px; margin-top: 18px; }
+.axes { display: grid; gap: 16px; margin-top: 24px; }
 .axis .row { display: flex; justify-content: space-between; font-size: 14px; font-weight: 800; margin-bottom: 6px; }
 .axis .row .dim { color: var(--ink-3); font-weight: 700; }
 .split { display: flex; height: 22px; gap: 2px; }
