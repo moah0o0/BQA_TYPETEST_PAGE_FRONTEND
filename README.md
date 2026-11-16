@@ -41,7 +41,7 @@ assets/characters/    ★ 유형별 캐릭터 그림 넣는 곳 (README 참고)
 2. GitHub 저장소 **Settings → Pages → Build and deployment**
    - Source: **Deploy from a branch**
    - Branch: `main` / `/ (root)`
-3. 주소는 `https://<계정>.github.io/BQA_TYPETEST_PAGE_FRONTEND/` 형태가 됩니다.
+3. 커스텀 도메인: `https://typetest.busanqueeract.kr` (저장소의 `CNAME` 파일로 고정)
    커스텀 도메인을 쓰면 Pages 설정에서 도메인을 넣고 DNS에 CNAME을 추가하세요.
 4. 백엔드의 `CORS_ORIGINS`에 이 주소의 **origin**(예: `https://moah0o0.github.io`)을 꼭 넣어 주세요.
 
