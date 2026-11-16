@@ -47,10 +47,13 @@
 </svg>`;
   }
 
+  // 그림 파일을 같은 이름으로 교체해도 늦어도 1시간 안에 반영되도록 시간 단위 버전을 붙임
+  const IMG_V = Math.floor(Date.now() / 3600000).toString(36);
+
   window.renderCharacter = function (code, opts = {}) {
     const t = (window.CONTENT.types || {})[code];
     if (t && t.image) {
-      return `<img class="char-img" src="${t.image}" alt="${t.name}" loading="lazy" decoding="async">`;
+      return `<img class="char-img" src="${t.image}?v=${IMG_V}" alt="${t.name}" loading="lazy" decoding="async">`;
     }
     return placeholderSVG(code, opts);
   };
