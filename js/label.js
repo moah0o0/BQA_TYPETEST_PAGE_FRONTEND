@@ -65,7 +65,8 @@
       if (!i.hasImage) notes.push("캐릭터 그림을 불러오지 못해 대체 표시");
       const LABEL = { body: "유형 설명 본문", clash: "부딪히며 성장", role: "네 가지 역할", cheer: "응원 문구", bestWhy: "궁합 설명", act3: "세 번째 활동", caution: "조심할 점" };
       if (i.dropped && i.dropped.length) notes.push("공간이 모자라 생략: " + i.dropped.map((k) => LABEL[k]).join(", "));
-      if (i.clamp) notes.push("뒷면 일부 말줄임(…)");
+      if (i.truncated) notes.push(`⚠ 글자 잘림 ${i.truncated}곳(…)`);
+      if (i.frontOverflow) notes.push("⚠ 앞면 넘침");
       if (i.overflow) notes.push("⚠ 뒷면 글이 넘쳐 일부 잘림");
       status(`No.${pad(current.number)} ${current.nickname} · ${C.types[current.code].name} — 출력 준비 완료${notes.length ? " (" + notes.join(", ") + ")" : ""}`, "");
     } catch (e) {

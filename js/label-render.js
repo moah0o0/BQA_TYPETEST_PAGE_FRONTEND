@@ -52,8 +52,11 @@
     return lines;
   }
 
+  // 말줄임(…)이 실제로 몇 번 일어났는지 셈 → 운영 화면에 "잘림" 경고
+  const TRUNC = { n: 0 };
   function clampLines(ctx, lines, maxLines, maxW) {
     if (lines.length <= maxLines) return lines;
+    TRUNC.n++;
     const out = lines.slice(0, maxLines);
     let last = out[maxLines - 1];
     while (last && ctx.measureText(last + "…").width > maxW) last = last.slice(0, -1);
@@ -189,8 +192,12 @@
     drawText(ctx, C().meta.title, W / 2, y, { weight: 900, size: 36, align: "center" }); y += 46;
     solidRule(ctx, y); y += 3 + 12 + extra;
 
-    const who = fitOneLine(ctx, `${r.nickname} 님의 퀴어 활동 유형은`, 700, [24, 22], inner);
-    drawText(ctx, who.text, W / 2, y, { weight: 700, size: who.size, align: "center" }); y += who.size + 8;
+    // 닉네임이 길면 두 줄로 (말줄임 없이)
+    let whoSize = 24, whoLines;
+    for (const s of [24, 22]) { whoSize = s; ctx.font = f(700, s); whoLines = wrap(ctx, `${r.nickname} 님의 퀴어 활동 유형은`, inner); if (whoLines.length === 1) break; }
+    whoLines = clampLines(ctx, whoLines, 2, inner);
+    whoLines.forEach((ln) => { drawText(ctx, ln, W / 2, y, { weight: 700, size: whoSize, align: "center" }); y += Math.round(whoSize * 1.3); });
+    y += 6;
 
     const ix = Math.round((W - imgBox) / 2);
     if (charImg) ctx.drawImage(charImg, ix, y); else placeholderMark(ctx, ix, y, imgBox, r.code);
@@ -203,12 +210,13 @@
     y += 4;
 
     ctx.font = f(800, 22);
-    const tag = clampLines(ctx, wrap(ctx, `“${t.tagline}”`, inner), 2, inner);
+    const tag = clampLines(ctx, wrap(ctx, `“${t.tagline}”`, inner), 3, inner);
     tag.forEach((ln) => { drawText(ctx, ln, W / 2, y, { weight: 800, size: 22, align: "center" }); y += 30; });
     y += 2;
 
-    const kw = fitOneLine(ctx, t.keywords.map((k) => "#" + k).join(" "), 700, [22], inner);
-    drawText(ctx, kw.text, W / 2, y, { weight: 700, size: 22, align: "center" }); y += 30;
+    ctx.font = f(700, 22);
+    clampLines(ctx, wrap(ctx, t.keywords.map((k) => "#" + k).join(" "), inner), 2, inner)
+      .forEach((ln) => { drawText(ctx, ln, W / 2, y, { weight: 700, size: 22, align: "center" }); y += 30; });
 
     return y;    // 실제로 쓴 높이 (넘침 판단용)
   }
@@ -241,7 +249,7 @@
     if (!off.has("role")) B.push({ title: "네 가지 역할로 보면", paras: [{ text: t.role.name, weight: 700, max: 2 }] });
     B.push({ title: "찰떡 궁합", paras: [{ text: off.has("bestWhy") ? best.name : `${best.name} — ${t.bestWith.why}`, weight: 700, max: 3 }] });
     if (!off.has("clash")) B.push({ title: "부딪히며 성장", paras: [{ text: clash.name, weight: 700, max: 1 }] });
-    if (r.message) B.push({ kind: "msg", text: `“${r.message}”`, max: 3 });
+    if (r.message) B.push({ kind: "msg", text: `“${r.message}”`, max: 5 });   // 참여자가 쓴 글은 자르지 않음 (60자 ≈ 4~5줄)
     if (!off.has("cheer")) B.push({ kind: "cheer", text: t.cheer, max: 2 });
     return B;
   }
@@ -262,9 +270,11 @@
         if (box) { y += 6; if (draw) { ctx.lineWidth = 3; ctx.strokeStyle = "#000"; roundRect(ctx, M + 1.5, top + 1.5, inner - 3, y - top - 3, 14); ctx.stroke(); } }
         return;
       }
-      if (draw) drawText(ctx, "■ " + b.title, M, y, { weight: 900, size });
+      // 소제목도 줄바꿈 (유형 소개 제목이 길 수 있음)
       ctx.font = f(900, size);
-      y += lh * (clamp ? 1 : wrap(ctx, "■ " + b.title, inner).length);
+      let heads = wrap(ctx, "■ " + b.title, inner);
+      if (clamp) heads = clampLines(ctx, heads, 2, inner);
+      heads.forEach((ln) => { if (draw) drawText(ctx, ln, M, y, { weight: 900, size }); y += lh; });
       b.paras.forEach((p) => {
         ctx.font = f(p.weight, size);
         let lines = wrap(ctx, p.text, inner); if (clamp) lines = clampLines(ctx, lines, p.max, inner);
@@ -286,9 +296,10 @@
 
     // 큰 글자 → 작은 글자 → 줄 수 제한(…) → 덜 중요한 것 빼기 순서로, 처음 들어가는 조합을 고름
     let pick = null;
-    outer: for (let level = 0; level <= MAX_LEVEL; level++) {
-      const blocks = backBlocks(r, level);
-      for (const clamp of [false, true]) {
+    // 말줄임보다 덜 중요한 항목을 빼는 쪽을 먼저 시도
+    outer: for (const clamp of [false, true]) {
+      for (let level = 0; level <= MAX_LEVEL; level++) {
+        const blocks = backBlocks(r, level);
         for (const s of [24, MIN_PX]) {
           if (layoutBack(ctx, blocks, top, s, clamp, false) <= limit) { pick = { blocks, size: s, clamp, level }; break outer; }
         }
@@ -298,10 +309,12 @@
 
     // 어떤 경우에도 하단 문구를 침범하지 않도록 잘라서 그림
     ctx.save(); ctx.beginPath(); ctx.rect(0, 0, W, limit); ctx.clip();
+    TRUNC.n = 0;
     layoutBack(ctx, pick.blocks, top, pick.size, pick.clamp, true);
+    const backTrunc = TRUNC.n;
     ctx.restore();
 
-    return { size: pick.size, clamp: pick.clamp, level: pick.level, dropped: DROPS.slice(0, pick.level), overflow: !!pick.overflow };
+    return { size: pick.size, clamp: pick.clamp, level: pick.level, dropped: DROPS.slice(0, pick.level), overflow: !!pick.overflow, backTrunc };
   }
 
   // ---------- 공개 API ----------
@@ -336,17 +349,16 @@
       if (used <= frontLimit) break;
     }
     const spare = frontLimit - used;
-    if (spare > 8) {
-      front = newCanvas();
-      drawFront(front.getContext("2d"), r, art, box, { withQR, url, extra: Math.floor(spare / 2) });
-    }
+    front = newCanvas(); TRUNC.n = 0;            // 최종 그리기 (말줄임 횟수 측정)
+    const usedFinal = drawFront(front.getContext("2d"), r, art, box, { withQR, url, extra: spare > 8 ? Math.floor(spare / 2) : 0 });
+    const frontTrunc = TRUNC.n, frontOverflow = usedFinal > frontLimit;
     if (withQR) drawFrontQR(front.getContext("2d"), url);
     binarize(front);
 
     const back = newCanvas();
     const info = drawBack(back.getContext("2d"), r);
     binarize(back);
-    return { front, back, info: { ...info, imageBox: box, hasImage: !!img } };
+    return { front, back, info: { ...info, imageBox: box, hasImage: !!img, frontTrunc, frontOverflow, truncated: frontTrunc + info.backTrunc } };
   }
 
   window.LabelRender = { render, W, H };
