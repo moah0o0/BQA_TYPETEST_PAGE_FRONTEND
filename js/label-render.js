@@ -12,7 +12,8 @@
   const W = 384, H = 720, M = 20;                // 가장자리 여백 20px ≈ 2.5mm
   const FAMILY = '"Pretendard Variable", Pretendard, "Apple SD Gothic Neo", sans-serif';
   const MIN_PX = 22;                             // 최소 글자 크기 ≈ 8pt
-  const IMAGE_GAMMA = 0.6;                       // <1 이면 캐릭터 중간톤을 밝게 (어두운 비둘기가 새까맣게 뭉개지지 않도록)
+  const IMAGE_GAMMA = 0.45;                      // <1 이면 캐릭터 중간톤을 밝게 (어두운 비둘기 몸통이 새까맣게 뭉개지지 않도록)
+  const LINE_LUM = 0.22;                         // 이보다 어두운 픽셀(그림 외곽선)은 디더링하지 않고 진한 검정으로 → 눈·부리·윤곽 유지
 
   const C = () => window.CONTENT;
   const pad = (n) => String(n).padStart(4, "0");
@@ -87,16 +88,19 @@
     ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, box, box);
     const s = Math.min(box / img.width, box / img.height);
     const w = Math.round(img.width * s), h = Math.round(img.height * s);
+    ctx.imageSmoothingQuality = "high";
     ctx.drawImage(img, Math.round((box - w) / 2), Math.round((box - h) / 2), w, h);
     const id = ctx.getImageData(0, 0, box, box), d = id.data;
-    const g = new Float32Array(box * box);
+    const g = new Float32Array(box * box), line = new Uint8Array(box * box);
     for (let i = 0; i < g.length; i++) {
       const lum = (0.299 * d[i * 4] + 0.587 * d[i * 4 + 1] + 0.114 * d[i * 4 + 2]) / 255;
-      g[i] = 255 * Math.pow(lum, IMAGE_GAMMA);
+      if (lum < LINE_LUM) { line[i] = 1; g[i] = 0; } else g[i] = 255 * Math.pow(lum, IMAGE_GAMMA);
     }
     for (let y = 0; y < box; y++) {
       for (let x = 0; x < box; x++) {
-        const i = y * box + x, old = g[i], nv = old < 128 ? 0 : 255, err = old - nv;
+        const i = y * box + x;
+        if (line[i]) { g[i] = 0; continue; }          // 외곽선은 오차를 퍼뜨리지 않음
+        const old = g[i], nv = old < 128 ? 0 : 255, err = old - nv;
         g[i] = nv;
         if (x + 1 < box) g[i + 1] += err * 7 / 16;
         if (y + 1 < box) {
