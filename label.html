@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>라벨 출력 · 운영</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+  <style>body{margin:0;background:#f5f5f7}</style>
+</head>
+<body>
+  <header class="bar">
+    <strong>퀴어 활동 캐해 · 라벨 출력 <small>(Niimbot B1 · 50×90mm)</small></strong>
+    <span class="bar-right"><a href="admin.html" class="bar-link">영수증 출력 화면</a><span id="conn" class="pill">서버 연결 안 됨</span></span>
+  </header>
+
+  <p id="unsupported" class="warn" hidden>
+    이 브라우저는 Web Bluetooth를 지원하지 않아 프린터에 직접 출력할 수 없어요. <b>맥북의 Chrome</b>으로 열어 주세요.
+    (PNG 다운로드는 가능 → 공식 NIIMBOT 앱으로 출력)
+  </p>
+
+  <main class="wrap label-wrap">
+    <section class="col controls">
+      <details id="settings">
+        <summary>서버 연결 설정</summary>
+        <label>API 주소 <input id="api" placeholder="https://typetest-api.example.kr"></label>
+        <label>관리자 토큰 <input id="token" type="password" autocomplete="off"></label>
+        <button id="save">저장하고 연결</button>
+        <p class="muted">영수증 출력 화면과 같은 설정을 써요. 이 컴퓨터 브라우저에만 저장돼요.</p>
+      </details>
+
+      <form id="lookup" class="lookup">
+        <label for="num">참여 번호</label>
+        <div class="row"><input id="num" inputmode="numeric" pattern="[0-9]*" placeholder="예) 42" autocomplete="off"><button>불러오기</button></div>
+      </form>
+      <div id="recent" class="recent"></div>
+
+      <div class="printer card-box">
+        <div class="printer-head">
+          <strong>프린터</strong>
+          <span id="pstate" class="pill gray">연결 안 됨</span>
+        </div>
+        <div class="actions">
+          <button id="connect">프린터 연결</button>
+          <button id="print" class="primary big" disabled>출력 (뒷면 → 앞면)</button>
+        </div>
+        <p id="status" class="status" role="status" aria-live="polite">번호를 불러오면 출력할 수 있어요.</p>
+        <details class="tune">
+          <summary>출력 설정</summary>
+          <label><input type="checkbox" id="withQR" checked> 뒷면에 QR 코드 넣기 <span class="muted">(끄면 본문을 더 크게·많이)</span></label>
+          <label>농도(진하기) <select id="density"><option>1</option><option>2</option><option selected>3</option><option>4</option><option>5</option></select></label>
+          <label>세로 위치 보정 <input id="offsetY" type="number" step="1" value="4" style="width:80px"> px <span class="muted">(+면 아래로, 8px = 1mm)</span></label>
+        </details>
+      </div>
+
+      <details class="memo" open>
+        <summary>현장 운영 메모</summary>
+        <ul>
+          <li><b>롤을 새로 넣을 때마다 전원 버튼을 한 번</b> 누르세요. B1은 세로 80mm 이상 라벨을 처음 넣으면 첫 장이 자동 정렬되지 않아요. 전원 버튼을 누르거나 한 장 배출하면 정렬돼요.</li>
+          <li>출력 순서는 <b>뒷면(2/2) → 앞면(1/2)</b>이에요.</li>
+          <li><b>양면 카드 만들기:</b> 뒷면 라벨은 받침지째로 둘레를 자르고, 앞면 라벨을 떼서 뒷면의 받침지 뒤쪽에 붙여요.</li>
+          <li>기기 선택 창을 닫으면 나오는 <code>User cancelled the requestDevice() chooser</code>는 정상 메시지예요.</li>
+          <li>연속 출력은 배터리 소모가 커요. <b>보조배터리 + USB-C 케이블</b>을 연결해 두세요.</li>
+          <li>블루투스가 계속 안 되면: 앞·뒤 <b>PNG 다운로드</b> → 공식 NIIMBOT 맥 앱으로 출력.</li>
+        </ul>
+      </details>
+    </section>
+
+    <section class="col previews">
+      <figure>
+        <figcaption>앞면 1/2</figcaption>
+        <div class="label-frame"><canvas id="front" width="384" height="720"></canvas></div>
+        <button id="dlFront" disabled>앞면 PNG 다운로드</button>
+      </figure>
+      <figure>
+        <figcaption>뒷면 2/2 <span class="muted">(먼저 출력)</span></figcaption>
+        <div class="label-frame"><canvas id="back" width="384" height="720"></canvas></div>
+        <button id="dlBack" disabled>뒷면 PNG 다운로드</button>
+      </figure>
+    </section>
+  </main>
+
+  <script>
+  /*
+   * 캐시 우회 로더
+   * 클라우드플레어가 JS/CSS를 브라우저에 4시간 캐시하기 때문에,
+   * script/link 태그 대신 매번 서버에 "바뀌었나?"를 확인(대부분 304, 몇 바이트)하고 받아 실행합니다.
+   * → 업데이트를 올리면 다음 접속부터 바로 반영 (강력 새로고침 불필요)
+   * 새 JS/CSS 파일을 추가하면 아래 목록에도 넣어 주세요.
+   */
+  (function (css, js) {
+    function get(u) {
+      return fetch(u, { cache: "no-cache" }).then(function (r) {
+        if (!r.ok) throw new Error(u + " " + r.status);
+        return r.text();
+      });
+    }
+    function fallback() {
+      var t = "?t=" + Date.now();
+      css.forEach(function (u) { var l = document.createElement("link"); l.rel = "stylesheet"; l.href = u + t; document.head.appendChild(l); });
+      (function next(i) {
+        if (i >= js.length) return;
+        var s = document.createElement("script"); s.src = js[i] + t; s.onload = function () { next(i + 1); };
+        document.body.appendChild(s);
+      })(0);
+    }
+    Promise.all([Promise.all(css.map(get)), Promise.all(js.map(get))]).then(function (res) {
+      res[0].forEach(function (text) { var st = document.createElement("style"); st.textContent = text; document.head.appendChild(st); });
+      res[1].forEach(function (text, i) {
+        var s = document.createElement("script");
+        s.textContent = text + "\n//# sourceURL=" + js[i];
+        document.body.appendChild(s);
+      });
+    }).catch(fallback);
+  })(["css/admin.css", "css/label.css"], ["js/config.js", "js/content.js", "vendor/qrcode.js", "vendor/niimbot.js", "js/label-render.js", "js/label.js"]);
+</script>
+</body>
+</html>

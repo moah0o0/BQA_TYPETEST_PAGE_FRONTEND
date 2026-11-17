@@ -17,6 +17,7 @@
 | `#/type/FPM` | 유형 해설 보기 |
 | `#/parade` | 행진 대열 (내 캐릭터는 '나' 표시) |
 | `#/stats` | 유형별 분포 · 축별 성향 그래프 |
+| `label.html` | **운영용** 참여 번호로 Niimbot B1 라벨(50×90mm) 앞·뒤 2장 출력 (블루투스) |
 | `admin.html` | **운영용** 번호로 해설지 불러와 영수증 출력 / PNG·텍스트 저장 / 부적절한 한마디 숨기기 |
 
 ## 파일 구조
@@ -101,3 +102,25 @@ python3 -m http.server 8080
 - 캐릭터 그림을 같은 파일명으로 바꾸면 늦어도 1시간 안에 반영돼요.
 - 올린 직후에는 GitHub Pages·클라우드플레어 서버 쪽 캐시 때문에 최대 10분쯤 걸릴 수 있어요.
   급하면 클라우드플레어 **Caching → Configuration → Purge Everything**.
+
+## 라벨 출력 (Niimbot B1, `label.html`)
+
+참여 번호 → 라벨 2장(앞면 1/2 · 뒷면 2/2) 미리보기 → 블루투스로 바로 출력합니다.
+
+- **맥북 Chrome**에서 `https://typetest.busanqueeract.kr/label.html` 열기 (Safari·Firefox는 Web Bluetooth 없음)
+- 서버 연결 설정은 영수증 화면(`admin.html`)과 같아요 (API 주소 + `ADMIN_TOKEN`)
+- **프린터 연결** → 기기 선택 창에서 B1 선택 (한 번 연결하면 유지, 끊기면 출력 버튼이 다시 연결)
+- **출력**: 뒷면(2/2) → 앞면(1/2) 순서로 연속 출력, 성공하면 '출력 완료' 표시
+- 예비용 **PNG 다운로드**(앞·뒤 각각) → 공식 NIIMBOT 맥 앱으로 출력
+- 출력 설정: QR 넣기/빼기, 농도 1~5, 세로 위치 보정(px)
+
+라벨 구성
+
+- 384×720px(203dpi, 8px/mm), 순수 흑백. 글자는 Pretendard(최소 22px ≈ 8pt), 선 두께 2px 이상
+- 캐릭터는 `assets/characters`의 그림을 흑백 디더링 → **그림 파일만 바꾸면 라벨에도 반영**
+- 문구는 `js/content.js`의 유형 데이터를 그대로 사용 (`meta.event`가 뒷면 하단 문구)
+- 뒷면이 넘치면 글자 크기 → 말줄임 → 덜 중요한 줄(강점 → 활동 3번째 → 파트너 설명) 순서로 줄여 맞춤.
+  QR을 끄면 그만큼 본문이 커져요.
+
+코드: `label.html`, `js/label.js`(화면·출력), `js/label-render.js`(라벨 그리기),
+`vendor/niimbot.js`(niimbot-web-bluetooth 2.6.0), `vendor/qrcode.js`(qrcode-generator 1.4.4)

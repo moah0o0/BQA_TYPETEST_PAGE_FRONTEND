@@ -1,0 +1,30 @@
+.bar small { font-weight: 400; opacity: .8; }
+.bar-right { display: flex; gap: 10px; align-items: center; }
+.bar-link { color: #fff; font-size: 14px; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
+.warn { margin: 12px 20px 0; padding: 12px 14px; border-radius: 10px; background: #fff3cd; border: 1px solid #f0c36d; font-size: 14px; }
+.label-wrap { grid-template-columns: minmax(320px, 420px) 1fr; }
+.recent { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 0; }
+.recent button { font-size: 13px; padding: 5px 9px; font-weight: 600; }
+.recent button.printed { color: #888; }
+.card-box { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 14px; margin: 16px 0; }
+.printer-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.pill.gray { background: #e5e5ea; color: #333; }
+.pill.ok { color: #fff; } .pill.bad { color: #fff; }
+.pill.busy { background: #ffb703; color: #222; }
+button.big { font-size: 17px; padding: 12px 18px; flex: 1; }
+.status { margin: 12px 0 0; padding: 10px 12px; border-radius: 8px; background: #f2f2f7; font-size: 14px; font-weight: 600; min-height: 1.4em; }
+.status.ok { background: #d8f5ec; color: #0b6b4f; }
+.status.bad { background: #fde2e4; color: #9d0208; }
+.status.busy { background: #fff3cd; color: #6b4e00; }
+.tune { margin-top: 12px; font-size: 14px; border: 0; padding: 0; }
+.tune label { display: flex; gap: 8px; align-items: center; margin: 8px 0; }
+.memo { font-size: 14px; line-height: 1.6; }
+.memo ul { padding-left: 18px; margin: 8px 0 0; }
+.memo li + li { margin-top: 6px; }
+.previews { display: flex; gap: 20px; flex-wrap: wrap; align-items: flex-start; position: static; }
+.previews figure { margin: 0; display: grid; gap: 8px; justify-items: start; }
+.previews figcaption { font-weight: 800; }
+.label-frame { background: #fff; padding: 6px; border-radius: 10px; box-shadow: 0 2px 12px rgba(0,0,0,.12); }
+.label-frame canvas { display: block; width: 260px; height: 488px; }
+@media (min-width: 1500px) { .label-frame canvas { width: 384px; height: 720px; image-rendering: pixelated; } }
+@media (max-width: 760px) { .label-wrap { grid-template-columns: 1fr; } }
