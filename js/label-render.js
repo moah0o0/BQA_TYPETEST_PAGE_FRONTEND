@@ -12,6 +12,9 @@
   const W = 384, H = 720, M = 20;                // 가장자리 여백 20px ≈ 2.5mm
   const FAMILY = '"Pretendard Variable", Pretendard, "Apple SD Gothic Neo", sans-serif';
   const MIN_PX = 22;                             // 최소 글자 크기 ≈ 8pt
+  // 감열 출력에서 글자가 흐리지 않도록: 본문도 굵게(700 이상) 쓰고,
+  // 흑백 변환 기준을 128보다 높여 글자 가장자리의 회색 픽셀까지 검정으로 → 획이 약 1px 두꺼워짐
+  const TEXT_CUTOFF = 170;
   const IMAGE_GAMMA = 0.45;                      // <1 이면 캐릭터 중간톤을 밝게 (어두운 비둘기 몸통이 새까맣게 뭉개지지 않도록)
   const LINE_LUM = 0.22;                         // 이보다 어두운 픽셀(그림 외곽선)은 디더링하지 않고 진한 검정으로 → 눈·부리·윤곽 유지
 
@@ -65,7 +68,7 @@
     return { size: s, text: clampLines(ctx, wrap(ctx, text, maxW), 1, maxW)[0] };
   }
 
-  function drawText(ctx, text, x, y, { weight = 500, size = 24, align = "left" } = {}) {
+  function drawText(ctx, text, x, y, { weight = 700, size = 24, align = "left" } = {}) {
     ctx.font = f(weight, size); ctx.textAlign = align; ctx.textBaseline = "top"; ctx.fillStyle = "#000";
     ctx.fillText(text, x, y);
   }
@@ -125,7 +128,7 @@
     const ctx = cv.getContext("2d"), id = ctx.getImageData(0, 0, W, H), d = id.data;
     for (let i = 0; i < d.length; i += 4) {
       const lum = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
-      const v = lum < 128 ? 0 : 255; d[i] = d[i + 1] = d[i + 2] = v; d[i + 3] = 255;
+      const v = lum < TEXT_CUTOFF ? 0 : 255; d[i] = d[i + 1] = d[i + 2] = v; d[i + 3] = 255;
     }
     ctx.putImageData(id, 0, 0);
     return cv;
@@ -155,8 +158,8 @@
 
     drawText(ctx, `${C().meta.title} 결과지`, W / 2, y, { weight: 800, size: 26, align: "center" }); y += 38;
 
-    const who = fitOneLine(ctx, `${r.nickname} 님의 활동 유형은`, 600, [24, 22], inner);
-    drawText(ctx, who.text, W / 2, y, { weight: 600, size: who.size, align: "center" }); y += who.size + 14;
+    const who = fitOneLine(ctx, `${r.nickname} 님의 활동 유형은`, 700, [24, 22], inner);
+    drawText(ctx, who.text, W / 2, y, { weight: 700, size: who.size, align: "center" }); y += who.size + 14;
 
     // 유형 이름: 한 줄로 최대한 크게, 안 되면 두 줄
     let nameLines, nameSize;
@@ -165,15 +168,15 @@
     nameLines.forEach((ln) => { drawText(ctx, ln, W / 2, y, { weight: 900, size: nameSize, align: "center" }); y += Math.round(nameSize * 1.15); });
     y += 4;
 
-    if (t.formerly) { drawText(ctx, t.formerly, W / 2, y, { weight: 700, size: 22, align: "center" }); y += 34; }
+    if (t.formerly) { drawText(ctx, t.formerly, W / 2, y, { weight: 800, size: 22, align: "center" }); y += 34; }
 
     const ix = Math.round((W - imgBox) / 2);
     if (charImg) ctx.drawImage(charImg, ix, y); else placeholderMark(ctx, ix, y, imgBox, r.code);
     y += imgBox + 10;
 
-    ctx.font = f(700, 24);
+    ctx.font = f(800, 24);
     const tag = clampLines(ctx, wrap(ctx, `“${t.tagline}”`, inner), 2, inner);
-    tag.forEach((ln) => { drawText(ctx, ln, W / 2, y, { weight: 700, size: 24, align: "center" }); y += 32; });
+    tag.forEach((ln) => { drawText(ctx, ln, W / 2, y, { weight: 800, size: 24, align: "center" }); y += 32; });
     y += 8;
 
     // 축 칩 3개 (현장 정치 대중)
@@ -198,17 +201,17 @@
   //  0 전부 · 1 '강점' 줄 생략 · 2 잘 맞는 활동 2개만 · 3 파트너 설명 생략
   function backBlocks(r, level = 0) {
     const t = C().types[r.code], best = C().types[t.bestWith.code];
-    const about = [{ text: t.sections[0].title, weight: 700 }];
-    if (level < 1) about.push({ text: t.receipt.strength, weight: 500 });
-    const acts = (level < 2 ? t.goodAt : t.goodAt.slice(0, 2)).map((g) => ({ text: "· " + g, weight: 500 }));
+    const about = [{ text: t.sections[0].title, weight: 800 }];
+    if (level < 1) about.push({ text: t.receipt.strength, weight: 700 });
+    const acts = (level < 2 ? t.goodAt : t.goodAt.slice(0, 2)).map((g) => ({ text: "· " + g, weight: 700 }));
     const partner = [{ text: best.name, weight: 800 }];
-    if (level < 3) partner.push({ text: t.bestWith.why, weight: 500 });
+    if (level < 3) partner.push({ text: t.bestWith.why, weight: 700 });
     const blocks = [
       { title: "이런 사람이에요", paras: about, max: about.map(() => 2) },
       { title: "잘 맞는 활동", paras: acts, max: acts.map(() => 2) },
       { title: "찰떡 파트너", paras: partner, max: [1, 2] },
     ];
-    if (r.message) blocks.push({ title: "나의 한마디", box: true, paras: [{ text: `“${r.message}”`, weight: 700 }], max: [3] });
+    if (r.message) blocks.push({ title: "나의 한마디", box: true, paras: [{ text: `“${r.message}”`, weight: 800 }], max: [3] });
     return blocks;
   }
 
@@ -273,7 +276,7 @@
       const q = drawQR(ctx, url, M, footTop, QR);
       const tx = M + q + 14;
       drawText(ctx, "내 결과 다시 보기", tx, footTop + 2, { weight: 800, size: 22 });
-      drawText(ctx, "QR을 찍어 보세요", tx, footTop + 32, { weight: 500, size: 22 });
+      drawText(ctx, "QR을 찍어 보세요", tx, footTop + 32, { weight: 700, size: 22 });
       const ev = fitOneLine(ctx, C().meta.event || "", 800, [22], W - M - tx);
       drawText(ctx, ev.text, tx, H - M - 22 - 30, { weight: 800, size: 22 });
     } else {
