@@ -198,19 +198,21 @@
 
   // ---------- 뒷면 (2/2) ----------
   // level이 올라갈수록 덜 중요한 줄을 뺌 (공간이 모자랄 때만)
-  //  0 전부 · 1 '강점' 줄 생략 · 2 잘 맞는 활동 2개만 · 3 파트너 설명 생략
+  //  0 전부 · 1 '조심할 점' 생략 · 2 '강점' 줄 생략 · 3 잘 맞는 활동 2개만 · 4 파트너 설명 생략
+  const MAX_LEVEL = 4;
   function backBlocks(r, level = 0) {
     const t = C().types[r.code], best = C().types[t.bestWith.code];
     const about = [{ text: t.sections[0].title, weight: 800 }];
-    if (level < 1) about.push({ text: t.receipt.strength, weight: 700 });
-    const acts = (level < 2 ? t.goodAt : t.goodAt.slice(0, 2)).map((g) => ({ text: "· " + g, weight: 700 }));
+    if (level < 2) about.push({ text: "강점 · " + t.receipt.strength, weight: 700 });
+    const acts = (level < 3 ? t.goodAt : t.goodAt.slice(0, 2)).map((g) => ({ text: "· " + g, weight: 700 }));
     const partner = [{ text: best.name, weight: 800 }];
-    if (level < 3) partner.push({ text: t.bestWith.why, weight: 700 });
+    if (level < 4) partner.push({ text: t.bestWith.why, weight: 700 });
     const blocks = [
       { title: "이런 사람이에요", paras: about, max: about.map(() => 2) },
       { title: "잘 맞는 활동", paras: acts, max: acts.map(() => 2) },
       { title: "찰떡 파트너", paras: partner, max: [1, 2] },
     ];
+    if (level < 1) blocks.push({ title: "조심할 점", paras: [{ text: t.receipt.caution, weight: 700 }], max: [2] });
     if (r.message) blocks.push({ title: "나의 한마디", box: true, paras: [{ text: `“${r.message}”`, weight: 800 }], max: [3] });
     return blocks;
   }
@@ -249,15 +251,24 @@
     return n * mod;
   }
 
-  function drawBack(ctx, r, { withQR, url }) {
+  // 앞면 하단: QR + 안내 (결과 웹페이지로 연결)
+  const QR = 116;                                   // QR 한 칸 4px(0.5mm) × 29칸 ≈ 14.5mm
+  function drawFrontQR(ctx, url) {
+    const top = H - M - QR;
+    const q = drawQR(ctx, url, M, top, QR);
+    const tx = M + q + 14;
+    drawText(ctx, "내 결과 다시 보기", tx, top + 8, { weight: 800, size: 22 });
+    drawText(ctx, "QR을 찍어 보세요", tx, top + 38, { weight: 700, size: 22 });
+  }
+
+  function drawBack(ctx, r) {
     const top = header(ctx, r.number) + 16;
-    const QR = 116;                                   // QR 한 칸 4px(0.5mm) × 29칸
-    const footTop = withQR ? H - M - QR : H - M - 26;
+    const footTop = H - M - 26;
     const limit = footTop - 14;
 
     // 큰 글자 → 작은 글자 → 줄 수 제한(…) → 덜 중요한 줄 빼기 순서로, 처음 들어가는 조합을 고름
     let pick = null;
-    outer: for (let level = 0; level <= 3; level++) {
+    outer: for (let level = 0; level <= MAX_LEVEL; level++) {
       const blocks = backBlocks(r, level);
       for (const clamp of [false, true]) {
         for (const s of [28, 26, 24, MIN_PX]) {
@@ -265,23 +276,14 @@
         }
       }
     }
-    if (!pick) pick = { blocks: backBlocks(r, 3), size: MIN_PX, clamp: true, level: 3, overflow: true };
+    if (!pick) pick = { blocks: backBlocks(r, MAX_LEVEL), size: MIN_PX, clamp: true, level: MAX_LEVEL, overflow: true };
 
-    // 어떤 경우에도 QR/하단 문구 영역을 침범하지 않도록 잘라서 그림
+    // 어떤 경우에도 하단 문구 영역을 침범하지 않도록 잘라서 그림
     ctx.save(); ctx.beginPath(); ctx.rect(0, 0, W, limit + 6); ctx.clip();
     layoutBack(ctx, pick.blocks, top, pick.size, pick.clamp, true);
     ctx.restore();
 
-    if (withQR) {
-      const q = drawQR(ctx, url, M, footTop, QR);
-      const tx = M + q + 14;
-      drawText(ctx, "내 결과 다시 보기", tx, footTop + 2, { weight: 800, size: 22 });
-      drawText(ctx, "QR을 찍어 보세요", tx, footTop + 32, { weight: 700, size: 22 });
-      const ev = fitOneLine(ctx, C().meta.event || "", 800, [22], W - M - tx);
-      drawText(ctx, ev.text, tx, H - M - 22 - 30, { weight: 800, size: 22 });
-    } else {
-      drawText(ctx, C().meta.event || "", M, H - M - 22, { weight: 800, size: 22 });
-    }
+    drawText(ctx, C().meta.event || "", M, H - M - 22, { weight: 800, size: 22 });
     pageMark(ctx, "2/2");
     return { size: pick.size, clamp: pick.clamp, level: pick.level, overflow: !!pick.overflow };
   }
@@ -289,7 +291,7 @@
   // ---------- 공개 API ----------
   /**
    * @param r    결과 { number, nickname, message, code }
-   * @param opts { withQR: true, resultUrl }
+   * @param opts { withQR: true(앞면 하단에 QR), resultUrl }
    * @returns { front: canvas, back: canvas, info }
    */
   async function render(r, opts = {}) {
@@ -298,8 +300,8 @@
     const withQR = opts.withQR !== false;
     const best = C().types[t.bestWith.code];
     await ensureFonts([
-      C().meta.org, C().meta.title, C().meta.event || "", "결과지 님의 활동 유형은 이런 사람이에요 잘 맞는 활동 찰떡 파트너 나의 한마디 내 결과 다시 보기 QR을 찍어 보세요 No.0123456789/…“”·",
-      r.nickname, r.message || "", t.name, t.formerly || "", t.tagline, t.sections[0].title, t.receipt.strength,
+      C().meta.org, C().meta.title, C().meta.event || "", "결과지 님의 활동 유형은 이런 사람이에요 잘 맞는 활동 찰떡 파트너 조심할 점 강점 나의 한마디 내 결과 다시 보기 QR을 찍어 보세요 No.0123456789/…“”·",
+      r.nickname, r.message || "", t.name, t.formerly || "", t.tagline, t.sections[0].title, t.receipt.strength, t.receipt.caution,
       t.goodAt.join(""), best.name, t.bestWith.why, C().axes.map((a) => Object.values(a.poles).join("")).join(""),
     ]);
 
@@ -307,9 +309,9 @@
     if (t.image) { try { img = await loadImage(t.image); } catch (_) { img = null; } }
 
     // 앞면: 캐릭터 240px(30mm) 기준, 넘치면 그림을 줄임
-    const frontLimit = H - M - 34;               // 우하단 1/2 표시 위까지
+    const frontLimit = withQR ? H - M - QR - 14 : H - M - 34;   // QR(또는 우하단 1/2 표시) 위까지
     let front, box = 240, used = 0, art = null;
-    for (; box >= 176; box -= 16) {
+    for (; box >= 160; box -= 16) {
       front = newCanvas(); art = img ? dither(img, box) : null;
       used = drawFront(front.getContext("2d"), r, art, box);
       if (used <= frontLimit) break;
@@ -319,10 +321,11 @@
       front = newCanvas();
       drawFront(front.getContext("2d"), r, art, box, Math.floor(spare / 2));
     }
+    if (withQR) drawFrontQR(front.getContext("2d"), opts.resultUrl || "");
     binarize(front);
 
     const back = newCanvas();
-    const info = drawBack(back.getContext("2d"), r, { withQR, url: opts.resultUrl || "" });
+    const info = drawBack(back.getContext("2d"), r);
     binarize(back);
     return { front, back, info: { ...info, imageBox: box, hasImage: !!img } };
   }

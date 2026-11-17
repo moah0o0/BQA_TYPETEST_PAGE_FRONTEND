@@ -65,7 +65,7 @@
       if (!i.hasImage) notes.push("캐릭터 그림을 불러오지 못해 대체 표시");
       if (i.level) notes.push("뒷면 공간이 모자라 일부 문장 생략");
       if (i.clamp) notes.push("뒷면 일부 말줄임(…)");
-      if (i.overflow) notes.push("⚠ 뒷면이 넘쳐 잘림 — QR을 끄면 다 들어가요");
+      if (i.overflow) notes.push("⚠ 뒷면 글이 넘쳐 일부 잘림");
       status(`No.${pad(current.number)} ${current.nickname} · ${C.types[current.code].name} — 출력 준비 완료${notes.length ? " (" + notes.join(", ") + ")" : ""}`, "");
     } catch (e) {
       rendered = null;
