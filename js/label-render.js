@@ -143,7 +143,6 @@
   // ---------- 공통 요소 (영수증 해설지와 같은 모양) ----------
   function solidRule(ctx, y) { ctx.fillRect(M, y, W - 2 * M, 3); }
   function dashedRule(ctx, y) { for (let x = M; x < W - M; x += 12) ctx.fillRect(x, y, 7, 2); }
-  function pageMark(ctx, text) { drawText(ctx, text, W - M, H - M - 22, { weight: 900, size: 22, align: "right" }); }
 
   function axesRows(r) {
     return C().axes.map((ax) => {
@@ -211,7 +210,6 @@
     const kw = fitOneLine(ctx, t.keywords.map((k) => "#" + k).join(" "), 700, [22], inner);
     drawText(ctx, kw.text, W / 2, y, { weight: 700, size: 22, align: "center" }); y += 30;
 
-    pageMark(ctx, "1/2");
     return y;    // 실제로 쓴 높이 (넘침 판단용)
   }
 
@@ -225,7 +223,7 @@
   }
 
   // ---------- 뒷면 (2/2) ----------
-  // 부산퀴어행동 No.0001 / ── / 축 막대 3줄 / - - - / ■ 섹션들 / 한마디 상자 / 응원 한 줄 / - - - / 축제 2/2
+  // 부산퀴어행동 No.0001 / ── / 축 막대 3줄 / - - - / ■ 섹션들 / 한마디 상자 / 응원 한 줄
   // level이 올라갈수록 덜 중요한 것부터 뺌 (공간이 모자랄 때만)
   const DROPS = ["body", "clash", "role", "cheer", "bestWhy", "act3", "caution"];
   const MAX_LEVEL = DROPS.length;
@@ -284,8 +282,7 @@
     top = drawAxes(ctx, r, top) + 6;
     dashedRule(ctx, top); top += 2 + 12;
 
-    const footTop = H - M - 22;
-    const limit = footTop - 18;
+    const limit = H - M;
 
     // 큰 글자 → 작은 글자 → 줄 수 제한(…) → 덜 중요한 것 빼기 순서로, 처음 들어가는 조합을 고름
     let pick = null;
@@ -300,13 +297,10 @@
     if (!pick) pick = { blocks: backBlocks(r, MAX_LEVEL), size: MIN_PX, clamp: true, level: MAX_LEVEL, overflow: true };
 
     // 어떤 경우에도 하단 문구를 침범하지 않도록 잘라서 그림
-    ctx.save(); ctx.beginPath(); ctx.rect(0, 0, W, limit + 4); ctx.clip();
+    ctx.save(); ctx.beginPath(); ctx.rect(0, 0, W, limit); ctx.clip();
     layoutBack(ctx, pick.blocks, top, pick.size, pick.clamp, true);
     ctx.restore();
 
-    dashedRule(ctx, footTop - 10);
-    drawText(ctx, C().meta.event || "", M, footTop, { weight: 800, size: 22 });
-    pageMark(ctx, "2/2");
     return { size: pick.size, clamp: pick.clamp, level: pick.level, dropped: DROPS.slice(0, pick.level), overflow: !!pick.overflow };
   }
 
@@ -323,7 +317,7 @@
     const url = opts.resultUrl || "";
     const best = C().types[t.bestWith.code], clash = C().types[t.clashWith.code];
     await ensureFonts([
-      C().meta.org, C().meta.title, C().meta.event || "",
+      C().meta.org, C().meta.title,
       "내 결과 다시 보기 QR을 찍어 보세요 님의 퀴어 활동 유형은 나의 강점 조심할 점 이런 활동이 잘 맞아요 네 가지 역할로 보면 찰떡 궁합 부딪히며 성장 내가 외친 한마디 ■ No.0123456789/…“”·—#",
       r.nickname, r.message || "", t.name, t.tagline, t.keywords.join(""), t.sections[0].title, t.sections[0].body,
       t.receipt.strength, t.receipt.caution, t.goodAt.join(""), t.role.name, best.name, t.bestWith.why, clash.name, t.cheer,
@@ -334,7 +328,7 @@
     if (t.image) { try { img = await loadImage(t.image); } catch (_) { img = null; } }
 
     // 앞면: 캐릭터 240px(30mm)부터, 넘치면 그림을 줄임. 남는 공간은 위아래로 나눠 가운데 정렬
-    const frontLimit = withQR ? H - M - QR - 12 : H - M - 30;   // QR(또는 우하단 1/2 표시) 위까지
+    const frontLimit = withQR ? H - M - QR - 12 : H - M;        // QR 위까지
     let front, box = 240, used = 0, art = null;
     for (; box >= 144; box -= 16) {
       front = newCanvas(); art = img ? dither(img, box) : null;
