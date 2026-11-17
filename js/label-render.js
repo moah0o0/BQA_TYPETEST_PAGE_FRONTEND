@@ -181,26 +181,14 @@
   const QR = 116;                                   // QR 한 칸 4px(0.5mm) × 29칸 ≈ 14.5mm
 
   // ---------- 앞면 (1/2) ----------
-  // 부산퀴어행동 / 퀴어 활동 캐해 / ── / 결과 번호 No.0001 (+QR) / ○○ 님의 퀴어 활동 유형은 /
-  // 캐릭터 / 유형 이름 / “한 줄 설명” / #키워드
+  // 부산퀴어행동 / 퀴어 활동 캐해 / ── / ○○ 님의 퀴어 활동 유형은 /
+  // 캐릭터 / 유형 이름 / “한 줄 설명” / #키워드 / (하단) QR + 안내
   function drawFront(ctx, r, charImg, imgBox, { withQR, url, extra = 0 }) {
     const t = C().types[r.code], inner = W - 2 * M;
     let y = M;
     drawText(ctx, C().meta.org, W / 2, y, { weight: 800, size: 22, align: "center" }); y += 30;
     drawText(ctx, C().meta.title, W / 2, y, { weight: 900, size: 36, align: "center" }); y += 46;
     solidRule(ctx, y); y += 3 + 12 + extra;
-
-    if (withQR) {                                  // 왼쪽: 결과 번호 / 오른쪽: QR
-      drawText(ctx, "결과 번호", M, y + 4, { weight: 700, size: 22 });
-      const no = fitOneLine(ctx, `No.${pad(r.number)}`, 900, [44, 40, 36], inner - QR - 12);
-      drawText(ctx, no.text, M, y + 32, { weight: 900, size: no.size });
-      drawText(ctx, "QR로 결과 다시 보기 →", M, y + 88, { weight: 700, size: 22 });
-      drawQR(ctx, url, W - M - QR, y, QR);
-      y += QR + 10;
-    } else {
-      drawText(ctx, "결과 번호", W / 2, y, { weight: 700, size: 22, align: "center" }); y += 28;
-      drawText(ctx, `No.${pad(r.number)}`, W / 2, y, { weight: 900, size: 48, align: "center" }); y += 58;
-    }
 
     const who = fitOneLine(ctx, `${r.nickname} 님의 퀴어 활동 유형은`, 700, [24, 22], inner);
     drawText(ctx, who.text, W / 2, y, { weight: 700, size: who.size, align: "center" }); y += who.size + 8;
@@ -225,6 +213,15 @@
 
     pageMark(ctx, "1/2");
     return y;    // 실제로 쓴 높이 (넘침 판단용)
+  }
+
+  // 앞면 하단: QR + 안내 (결과 웹페이지로 연결)
+  function drawFrontQR(ctx, url) {
+    const top = H - M - QR;
+    const q = drawQR(ctx, url, M, top, QR);
+    const tx = M + q + 14;
+    drawText(ctx, "내 결과 다시 보기", tx, top + 30, { weight: 800, size: 24 });
+    drawText(ctx, "QR을 찍어 보세요", tx, top + 62, { weight: 700, size: 22 });
   }
 
   // ---------- 뒷면 (2/2) ----------
@@ -316,7 +313,7 @@
   // ---------- 공개 API ----------
   /**
    * @param r    결과 { number, nickname, message, code, axis_counts }
-   * @param opts { withQR: true(앞면 결과 번호 옆 QR), resultUrl }
+   * @param opts { withQR: true(앞면 하단 QR), resultUrl }
    * @returns { front: canvas, back: canvas, info }
    */
   async function render(r, opts = {}) {
@@ -327,7 +324,7 @@
     const best = C().types[t.bestWith.code], clash = C().types[t.clashWith.code];
     await ensureFonts([
       C().meta.org, C().meta.title, C().meta.event || "",
-      "결과 번호 QR로 결과 다시 보기 → 님의 퀴어 활동 유형은 나의 강점 조심할 점 이런 활동이 잘 맞아요 네 가지 역할로 보면 찰떡 궁합 부딪히며 성장 내가 외친 한마디 ■ No.0123456789/…“”·—#",
+      "내 결과 다시 보기 QR을 찍어 보세요 님의 퀴어 활동 유형은 나의 강점 조심할 점 이런 활동이 잘 맞아요 네 가지 역할로 보면 찰떡 궁합 부딪히며 성장 내가 외친 한마디 ■ No.0123456789/…“”·—#",
       r.nickname, r.message || "", t.name, t.tagline, t.keywords.join(""), t.sections[0].title, t.sections[0].body,
       t.receipt.strength, t.receipt.caution, t.goodAt.join(""), t.role.name, best.name, t.bestWith.why, clash.name, t.cheer,
       C().axes.map((a) => Object.values(a.poles).join("")).join(""),
@@ -337,7 +334,7 @@
     if (t.image) { try { img = await loadImage(t.image); } catch (_) { img = null; } }
 
     // 앞면: 캐릭터 240px(30mm)부터, 넘치면 그림을 줄임. 남는 공간은 위아래로 나눠 가운데 정렬
-    const frontLimit = H - M - 30;               // 우하단 1/2 표시 위까지
+    const frontLimit = withQR ? H - M - QR - 12 : H - M - 30;   // QR(또는 우하단 1/2 표시) 위까지
     let front, box = 240, used = 0, art = null;
     for (; box >= 144; box -= 16) {
       front = newCanvas(); art = img ? dither(img, box) : null;
@@ -349,6 +346,7 @@
       front = newCanvas();
       drawFront(front.getContext("2d"), r, art, box, { withQR, url, extra: Math.floor(spare / 2) });
     }
+    if (withQR) drawFrontQR(front.getContext("2d"), url);
     binarize(front);
 
     const back = newCanvas();
